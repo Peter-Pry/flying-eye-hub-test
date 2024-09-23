@@ -44,7 +44,7 @@ package-lock.json
 pnpm-lock.yaml
 
 # Tailwind CSS
-tailwind.config.js
+# tailwind.config.js
 
 # Cesium statics in public
 public/cesium/
