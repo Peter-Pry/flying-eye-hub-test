@@ -33,5 +33,15 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://test.hub.dev.flyingeye.fr', // URL cible
+        changeOrigin: true, // Modifie l'origine de la requête
+        secure: false // Utilise true si SSL est correct, false si SSL auto-signé
+        //rewrite: (path) => path.replace(/^\/api/, '/api') // Garde `/api` dans l'URL
+      }
+    }
   }
 })
