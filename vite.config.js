@@ -39,7 +39,14 @@ export default defineConfig({
       '/api': {
         target: 'https://test.hub.dev.flyingeye.fr', // URL cible
         changeOrigin: true, // Modifie l'origine de la requête
-        secure: false // Utilise true si SSL est correct, false si SSL auto-signé
+        ws: true,
+        logLevel: 'debug',
+        headers: {
+          Authorization:
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmVkb2NrX3VzZXIifQ.-fJpasraNiTSKlM9grE3eeGDGkeqnoNielFFL1wlwiQ' // Authentification avec un token
+        },
+        followRedirects: true
+        //secure: false // Utilise true si SSL est correct, false si SSL auto-signé
         //rewrite: (path) => path.replace(/^\/api/, '/api') // Garde `/api` dans l'URL
       }
     }

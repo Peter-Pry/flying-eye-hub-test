@@ -26,7 +26,7 @@
 
     <div v-else>
         <!-- Affichage pendant le chargement -->
-        <p v-if="!flightRecordsLoaded">Chargement des données de vol...</p>
+        <p v-if="isLoading">Chargement des données de vol...</p>
         <p v-else>Sélectionnez un drone pour voir les détails de son vol.</p>
     </div>
 </template>
@@ -40,6 +40,7 @@ const droneStore = useDroneStore();
 const selectedDrone = computed(() => droneStore.selectedDrone);
 const flightRecords = computed(() => droneStore.flightRecords);
 const flightRecordsLoaded = computed(() => droneStore.flightRecordsLoaded); // Nouveau computed pour suivre le chargement des données
+const isLoading = computed(() => droneStore.isLoading);
 
 const currentStepIndex = ref(0);
 const isPlaying = ref(false);
