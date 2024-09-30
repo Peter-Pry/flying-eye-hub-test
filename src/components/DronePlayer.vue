@@ -24,10 +24,10 @@
         </ul>
     </div>
 
-    <div v-else>
+    <div v-else class="h-full w-full flex justify-center items-center">
         <!-- Affichage pendant le chargement -->
-        <p v-if="isLoading">Chargement des données de vol...</p>
-        <p v-else>Sélectionnez un drone pour voir les détails de son vol.</p>
+        <p v-if="isLoading" class="text-center text-2xl font-bold">Chargement des données de vol...</p>
+        <p v-else class="text-center text-2xl font-bold">Sélectionnez un drone pour voir les détails de son vol.</p>
     </div>
 </template>
 
