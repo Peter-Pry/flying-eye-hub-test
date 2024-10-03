@@ -7,6 +7,7 @@ export const useDroneStore = defineStore('droneStore', {
     selectedDrone: null,
     flightRecords: [],
     flightRecordsLoaded: false, // Indicateur pour savoir si les données sont chargées
+    droneListLoaded: false,
     loading: false,
     error: null
   }),
@@ -16,7 +17,7 @@ export const useDroneStore = defineStore('droneStore', {
       this.error = null
       try {
         const response = await axios.get('/api/device?ConId=1')
-
+        this.droneListLoaded = true
         //Simulation réponse API
         //const response = await axios.get('/drones.json')
         //console.log(response)

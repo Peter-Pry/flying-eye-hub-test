@@ -33,7 +33,7 @@
         </div>
 
         <!-- Liste filtrée des drones -->
-        <ul class="space-y-2">
+        <ul v-if="isDroneListLoading" class="space-y-2">
             <li v-for="drone in filteredDrones" :key="drone.dev_id"
                 class="border border-gray-300 p-4 rounded-lg shadow">
                 <div class="flex justify-between items-center">
@@ -48,6 +48,9 @@
                 </div>
             </li>
         </ul>
+        <div v-else>
+            <p>Chargement de la liste des drônes en cours</p>
+        </div>
 
         <!-- Bouton pour rafraîchir -->
         <div class="mt-6">
@@ -65,6 +68,10 @@ import { ref, computed, onMounted } from 'vue'
 
 // Charger le store des drones
 const droneStore = useDroneStore();
+//const isDroneListLoading = computed(() => droneStore.droneListLoaded);
+const isDroneListLoading = true;
+console.log(isDroneListLoading);
+
 
 // Champs de recherche
 const searchName = ref('');
