@@ -11,7 +11,8 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMDBlNGRjYy1kNzQ3LTQxNDUtYmU0Mi05Y2FmMWIwNWI4NWUiLCJpZCI6MjQzNDM4LCJpYXQiOjE3MjcwODc2NjF9.kY7ZKkYssmYJvjTnrfER2s68vGRzWcx-6yc5HYHWRwY';
 
 let currentConeEntity = null; // Variable pour stocker le cône actuel
-
+let currentDroneEntity = null;
+let currentConeObjet = null;
 let positionsWithAltitudes = []; // Variable pour stocker les positions avec altitude
 
 
@@ -50,12 +51,12 @@ async function calculatePositionsWithAltitude(records) {
     positionsWithAltitudes = updatedPositions.map((cartographic, index) => {
         const step = records[index];
 
-        // Appliquer la correction d'orientation pour heading, pitch et roll
-        const correctedAttitude = applyOrientationCorrection({
-            heading: step.attitude_head,
-            pitch: step.attitude_pitch,
-            roll: step.attitude_roll
-        });
+        // // Appliquer la correction d'orientation pour heading, pitch et roll
+        // const correctedAttitude = applyOrientationCorrection({
+        //     heading: step.attitude_head,
+        //     pitch: step.attitude_pitch,
+        //     roll: step.attitude_roll
+        // });
 
         // Calculer les altitudes relatives par rapport à la première position (dock)
         const relativeAltitude = dockAltitude + (step.height || 0); // Altitude relative par rapport au dock
@@ -68,9 +69,9 @@ async function calculatePositionsWithAltitude(records) {
             ),
             step: {
                 ...step,  // Garder les autres propriétés de l'étape
-                attitude_head: correctedAttitude.heading,   // Utiliser les valeurs corrigées
-                attitude_pitch: correctedAttitude.pitch,
-                attitude_roll: correctedAttitude.roll
+                attitude_head: positionsWithAltitudes.heading,   // Utiliser les valeurs corrigées
+                attitude_pitch: positionsWithAltitudes.pitch,
+                attitude_roll: positionsWithAltitudes.roll
             }
         };
     });
@@ -247,30 +248,6 @@ async function addStepLabels(records) {
     });
 }
 
-// Fonction pour ajouter des labels avec triangle bleu
-// async function addStepLabelsWithTriangle() {
-//     // const positionsWithAltitudes = await calculatePositionsWithAltitude(records);
-
-//     positionsWithAltitudes.forEach((data, index) => {
-//         viewer.entities.add({
-//             position: data.position,
-//             label: {
-//                 text: (index + 1).toString(), // Numérotation des étapes
-//                 font: '20px sans-serif',
-//                 fillColor: Color.WHITE,
-//                 outlineColor: Color.BLACK,
-//                 outlineWidth: 2,
-//                 style: LabelStyle.FILL_AND_OUTLINE,
-//                 verticalOrigin: VerticalOrigin.BOTTOM,
-//                 //pixelOffset: new Cartesian2(0, -10),
-//                 backgroundPadding: new Cartesian2(6, 6), // Padding pour le triangle
-//                 showBackground: true,
-//                 backgroundColor: Color.BLUE.withAlpha(0.8), // Triangle bleu
-//             }
-//         });
-//     });
-// }
-
 // Fonction pour ajouter des labels avec un triangle bleu en arrière-plan
 async function addStepLabelsWithTriangle() {
     positionsWithAltitudes.forEach((data, index) => {
@@ -346,6 +323,19 @@ async function createVisionCone(step, distance = 200) {
             position, new HeadingPitchRoll(heading, pitch, roll)
         );
 
+        //Ajout le modèle 3D d'un drone
+        const uri = '/3dmodels/CesiumDrone.glb';
+        const droneEntity = viewer.entities.add({
+            name: uri,
+            position: Cartesian3.fromDegrees(step.longitude, step.latitude, terrainPosition.height + (step.height || 0)),
+            orientation: orientation,
+            model: {
+                uri: uri,
+                minimumPixelSize: 128,
+                maximumScale: 100,
+            },
+        });
+
         // Ajouter un cône de vision pour l'étape sélectionnée, ajusté avec l'altitude
         const coneEntity = viewer.entities.add({
             position: position,
@@ -360,9 +350,75 @@ async function createVisionCone(step, distance = 200) {
                 slices: 4                        // Plus de slices pour une forme plus lisse
             }
         });
-        return coneEntity;
+        return { coneEntity, droneEntity };
     }
 }
+
+async function createVisionFrustumWithPolyline(step, distance = 200) {
+    if (isValidPosition(step)) {
+        // Obtenir la position du drone
+        const position = Cartesian3.fromDegrees(step.longitude, step.latitude, step.height || 0);
+
+        const heading = CesiumMath.toRadians(step.attitude_head || 0); // Cap
+        const pitch = CesiumMath.toRadians(step.attitude_pitch || 0);  // Inclinaison
+        const roll = CesiumMath.toRadians(step.attitude_roll || 0);    // Roulement
+
+        // Calculer l'orientation
+        const orientation = Transforms.headingPitchRollQuaternion(
+            position, new HeadingPitchRoll(heading, pitch, roll)
+        );
+
+        // Points du cône basés sur l'orientation de la caméra
+        const frustumDistance = distance; // Distance du cône de vision
+        const halfFOV = CesiumMath.toRadians(60 / 2); // Champ de vision de 60° (pour une caméra 1080p)
+
+        // Créer des directions du frustum (avant, gauche, droite, bas)
+        const forward = Cartesian3.multiplyByScalar(Cartesian3.fromQuaternion(orientation), frustumDistance, new Cartesian3());
+        const right = Cartesian3.multiplyByScalar(Cartesian3.cross(Cartesian3.UNIT_Z, forward, new Cartesian3()), frustumDistance * Math.tan(halfFOV), new Cartesian3());
+        const left = Cartesian3.negate(right, new Cartesian3());
+        const up = Cartesian3.multiplyByScalar(Cartesian3.cross(forward, right, new Cartesian3()), frustumDistance * Math.tan(halfFOV), new Cartesian3());
+        const down = Cartesian3.negate(up, new Cartesian3());
+
+        // Calculer les points du cône de vision
+        const forwardPosition = Cartesian3.add(position, forward, new Cartesian3());
+        const leftPosition = Cartesian3.add(forwardPosition, left, new Cartesian3());
+        const rightPosition = Cartesian3.add(forwardPosition, right, new Cartesian3());
+        const upPosition = Cartesian3.add(forwardPosition, up, new Cartesian3());
+        const downPosition = Cartesian3.add(forwardPosition, down, new Cartesian3());
+
+        // Créer la polyline pour représenter le frustum
+        viewer.entities.add({
+            polyline: {
+                positions: [
+                    position, forwardPosition, // Ligne droite
+                    position, leftPosition,    // Gauche
+                    position, rightPosition,   // Droite
+                    position, upPosition,      // Haut
+                    position, downPosition     // Bas
+                ],
+                width: 2,
+                material: Color.YELLOW
+            }
+        });
+
+        // Ajouter des lignes pour fermer le frustum (reliant les bords)
+        viewer.entities.add({
+            polyline: {
+                positions: [
+                    leftPosition, rightPosition,  // Relier les côtés gauche et droit
+                    upPosition, downPosition,     // Relier le haut et le bas
+                ],
+                width: 2,
+                material: Color.YELLOW
+            }
+        });
+
+        return {
+            frustumEntity: viewer.entities
+        };
+    }
+}
+
 
 
 
@@ -460,7 +516,9 @@ onMounted(async () => {
     // Afficher le cône de vision uniquement pour l'étape actuelle
     if (props.flightRecords[props.currentStepIndex]) {
         //currentConeEntity = await createVisionCone(props.currentStepIndex);
-        currentConeEntity = await createVisionCone(props.flightRecords[props.currentStepIndex]);
+        currentConeObjet = (await createVisionCone(props.flightRecords[props.currentStepIndex]));
+        currentConeEntity = currentConeObjet.coneEntity;
+        currentDroneEntity = currentConeObjet.droneEntity;
         //lookAtCurrentStep(props.flightRecords[props.currentStepIndex]); // Suivre la position courante
     }
 
@@ -487,13 +545,16 @@ watch(() => props.currentStepIndex, async (newIndex) => {
     // Si un cône de vision existe déjà, le supprimer
     if (currentConeEntity) {
         viewer.entities.remove(currentConeEntity);
-        currentConeEntity = null; // Réinitialiser la variable
+        viewer.entities.remove(currentDroneEntity);
+        currentConeObjet = null; // Réinitialiser la variable
     }
 
     // Afficher le cône de vision uniquement pour l'étape en cours
     if (props.flightRecords[newIndex]) {
-        currentConeEntity = await createVisionCone(props.flightRecords[newIndex]); // Mettre à jour le cône de vision
-        //currentConeEntity = await createVisionCone(newIndex); // Mettre à jour le cône de vision
+        currentConeObjet = (await createVisionCone(props.flightRecords[props.currentStepIndex]));
+        currentConeEntity = currentConeObjet.coneEntity;
+        currentDroneEntity = currentConeObjet.droneEntity;
+        viewer.trackedEntity = currentConeEntity;
     }
 });
 
