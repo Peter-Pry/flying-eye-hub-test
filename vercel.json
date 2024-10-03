@@ -2,8 +2,8 @@
   "name": "Flying-Hub-Demo",
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "https://test.hub.dev.flyingeye.fr/api/:match*"
+      "source": "/api/:path(.*)",
+      "destination": "https://test.hub.dev.flyingeye.fr/api/:path"
     }
   ]
 }
