@@ -25,7 +25,9 @@ export const useDroneStore = defineStore('droneStore', {
         // console.log(response)
 
         // const response = await axios.get('/api/device?ConId=1')
-        // console.log(response)
+        const response = await axios.get('/api/device?ConId=1')
+
+        console.log(response)
 
         // Ne fonctionne pas pour le moment, problème de configuration proxy
         // const response = await axios.get('/api/device?ConId=1', {
@@ -36,7 +38,9 @@ export const useDroneStore = defineStore('droneStore', {
         // })
 
         //Simulation réponse API
-        const response = await axios.get('/drones.json')
+        //const response = await axios.get('/drones.json')
+        //console.log(response)
+
         this.drones = response.data
       } catch (error) {
         console.error('Erreur lors de la récupération des drones:', error)

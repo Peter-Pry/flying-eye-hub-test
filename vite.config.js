@@ -42,12 +42,16 @@ export default defineConfig({
         ws: true,
         logLevel: 'debug',
         headers: {
+          // Authentification avec un token
           Authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmVkb2NrX3VzZXIifQ.-fJpasraNiTSKlM9grE3eeGDGkeqnoNielFFL1wlwiQ' // Authentification avec un token
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmVkb2NrX3VzZXIifQ.-fJpasraNiTSKlM9grE3eeGDGkeqnoNielFFL1wlwiQ',
+          // Forcer la réponse en format JSON
+          Accept: 'application/json'
         },
-        followRedirects: true
-        //secure: false // Utilise true si SSL est correct, false si SSL auto-signé
-        //rewrite: (path) => path.replace(/^\/api/, '/api') // Garde `/api` dans l'URL
+        followRedirects: true,
+        secure: false, // Utilise true si SSL est correct, false si SSL auto-signé
+        // Optionnel : réécriture si nécessaire
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   }
