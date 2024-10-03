@@ -15,27 +15,7 @@ export const useDroneStore = defineStore('droneStore', {
       this.loading = true
       this.error = null
       try {
-        //Ne fonctionne pas, Pb de Cors.
-        // const response = await axios.get('/api/device?ConId=1', {
-        //   headers: {
-        //     Authorization:
-        //       'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmVkb2NrX3VzZXIifQ.-fJpasraNiTSKlM9grE3eeGDGkeqnoNielFFL1wlwiQ'
-        //   }
-        // })
-        // console.log(response)
-
-        // const response = await axios.get('/api/device?ConId=1')
         const response = await axios.get('/api/device?ConId=1')
-
-        console.log(response)
-
-        // Ne fonctionne pas pour le moment, problème de configuration proxy
-        // const response = await axios.get('/api/device?ConId=1', {
-        //   headers: {
-        //     Authorization:
-        //       'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmVkb2NrX3VzZXIifQ.-fJpasraNiTSKlM9grE3eeGDGkeqnoNielFFL1wlwiQ'
-        //   }
-        // })
 
         //Simulation réponse API
         //const response = await axios.get('/drones.json')

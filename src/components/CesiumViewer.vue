@@ -162,22 +162,6 @@ async function createFlightPathWithArrows(records) {
 
 // Fonction pour dessiner des flèches distinctes entre chaque étape
 async function createDistinctFlightArrows(records) {
-    // const positionsWithAltitudes = await calculatePositionsWithAltitude(records);
-
-    // positionsWithAltitudes.forEach((data, index) => {
-    //     if (index < positionsWithAltitudes.length - 1) {
-    //         const nextPosition = positionsWithAltitudes[index + 1].position;
-
-    //         viewer.entities.add({
-    //             polyline: {
-    //                 positions: [data.position, nextPosition],
-    //                 width: 3,
-    //                 material: new PolylineArrowMaterialProperty(Color.WHITE), // Utiliser le matériau de flèche blanche
-    //                 clampToGround: false // S'assurer que la polyline n'est pas collée au sol si nécessaire
-    //             }
-    //         });
-    //     }
-    // });
     positionsWithAltitudes.forEach((data, index) => {
         if (index < positionsWithAltitudes.length - 1) {
             const nextPosition = positionsWithAltitudes[index + 1].position;
@@ -197,39 +181,6 @@ async function createDistinctFlightArrows(records) {
 
 // Fonction pour ajouter des étapes numérotées sur la trajectoire
 async function addStepLabels(records) {
-    // // Convertir les positions en Cartographic pour obtenir les altitudes du terrain
-    // const cartographics = records.map(step => Cartographic.fromDegrees(step.longitude, step.latitude));
-
-    // // Obtenir les altitudes du terrain pour chaque point
-    // const updatedPositions = await sampleTerrainMostDetailed(viewer.terrainProvider, cartographics);
-
-    // updatedPositions.forEach((cartographic, index) => {
-    //     const step = records[index]; // Récupérer l'étape actuelle
-
-    //     // Ajouter l'altitude du drone à l'altitude du terrain
-    //     const altitude = cartographic.height + (step.height || 0); // Ajoute step.height s'il est défini
-
-    //     const position = Cartesian3.fromDegrees(
-    //         CesiumMath.toDegrees(cartographic.longitude),
-    //         CesiumMath.toDegrees(cartographic.latitude),
-    //         altitude // Utiliser l'altitude combinée (terrain + drone)
-    //     );
-
-    //     viewer.entities.add({
-    //         position: position,
-    //         label: {
-    //             text: (index + 1).toString(), // Numérotation des étapes
-    //             font: '20px sans-serif',
-    //             backgroundColor: Color.BLUE,
-    //             fillColor: Color.WHITE,
-    //             outlineColor: Color.BLACK,
-    //             outlineWidth: 2,
-    //             style: LabelStyle.FILL_AND_OUTLINE,
-    //             verticalOrigin: VerticalOrigin.BOTTOM,
-    //             pixelOffset: new Cartesian2(0, -10)
-    //         }
-    //     });
-    // });
     positionsWithAltitudes.forEach((data, index) => {
         viewer.entities.add({
             position: data.position,
@@ -419,11 +370,6 @@ async function createVisionFrustumWithPolyline(step, distance = 200) {
     }
 }
 
-
-
-
-
-
 // Fonction pour que la caméra suive la position courante avec lookAt
 function lookAtCurrentStep(step) {
     if (isValidPosition(step)) {
@@ -496,14 +442,6 @@ onMounted(async () => {
     // Ajustement de la vue pour inclure toutes les étapes
     adjustCameraView(props.flightRecords);
 
-    // Trajectoire avec flèches blanches
-    // createFlightPathWithArrows(props.flightRecords);
-    // createDistinctFlightArrows(props.flightRecords);
-
-    // Numérotation des étapes
-    // addStepLabels(props.flightRecords);
-    // addStepLabelsWithTriangle(props.flightRecords);
-
     // Calculer les positions avec les altitudes avant d'appeler les autres fonctions
     await calculatePositionsWithAltitude(props.flightRecords);
 
@@ -515,7 +453,6 @@ onMounted(async () => {
 
     // Afficher le cône de vision uniquement pour l'étape actuelle
     if (props.flightRecords[props.currentStepIndex]) {
-        //currentConeEntity = await createVisionCone(props.currentStepIndex);
         currentConeObjet = (await createVisionCone(props.flightRecords[props.currentStepIndex]));
         currentConeEntity = currentConeObjet.coneEntity;
         currentDroneEntity = currentConeObjet.droneEntity;
@@ -526,30 +463,15 @@ onMounted(async () => {
 
 // Surveiller les changements de l'étape actuelle pour mettre à jour le cône de vision et le lookAt
 watch(() => props.currentStepIndex, async (newIndex) => {
-    // Supprimer toutes les entités avant d'ajouter le cône de l'étape actuelle
-    //viewer.entities.removeAll();
 
-    // Réafficher la trajectoire, les flèches et les labels
-    // createFlightPathWithArrows(props.flightRecords);
-    //createDistinctFlightArrows(props.flightRecords);
-    // addStepLabels(props.flightRecords);
-    //addStepLabelsWithTriangle(props.flightRecords);
-
-    // // Afficher le cône de vision uniquement pour l'étape en cours
-    // if (props.flightRecords[newIndex]) {
-    //     createVisionCone(props.flightRecords[newIndex]);
-    //     //createVisionFrustum(props.flightRecords[newIndex], 200);
-    //     //lookAtCurrentStep(props.flightRecords[newIndex]); // Suivre la position courante
-    // }
-
-    // Si un cône de vision existe déjà, le supprimer
+    // Si un cône de vision et un drone 3d existent déjà, les supprimer
     if (currentConeEntity) {
         viewer.entities.remove(currentConeEntity);
         viewer.entities.remove(currentDroneEntity);
         currentConeObjet = null; // Réinitialiser la variable
     }
 
-    // Afficher le cône de vision uniquement pour l'étape en cours
+    // Afficher le cône de vision et le drone uniquement pour l'étape en cours
     if (props.flightRecords[newIndex]) {
         currentConeObjet = (await createVisionCone(props.flightRecords[props.currentStepIndex]));
         currentConeEntity = currentConeObjet.coneEntity;
